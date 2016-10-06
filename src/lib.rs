@@ -2,7 +2,7 @@ extern crate libc;
 
 pub struct TermState(libc::termios);
 
-pub fn get_term_dims() -> (usize, usize)
+fn winsize() -> libc::winsize
 {
     let mut size = libc::winsize {
         ws_row: 0,
@@ -13,7 +13,26 @@ pub fn get_term_dims() -> (usize, usize)
     unsafe {
         libc::ioctl(libc::STDOUT_FILENO, libc::TIOCGWINSZ, &size);
     }
-    (size.ws_row as usize, size.ws_col as usize)
+    size
+}
+
+pub fn get_term_dims() -> (usize, usize)
+{
+    let size = winsize();
+    (size.ws_col as usize, size.ws_row as usize)
+}
+
+pub fn screen_aspect() -> f32
+{
+    let size = winsize();
+    println!("{:?}, {:?}", size.ws_xpixel, size.ws_ypixel);
+    size.ws_xpixel as f32 / size.ws_ypixel as f32
+}
+
+pub fn char_aspect() -> f32
+{
+    let size = winsize();
+    (size.ws_xpixel / size.ws_col) as f32 / (size.ws_ypixel / size.ws_row) as f32
 }
 
 pub fn gettermstate() -> TermState
